@@ -29,7 +29,8 @@ proc getFilters(): seq[Filter]=
         for filter in os.walkDirs(fmt"./{repoName}/*"):
             let filterName = filter.splitPath()[1]
             let filterUrl = url.split("://")[1].replace(".git", "") & "/" & filterName
-            result.add(newFilter(filterName, filterUrl))
+            if fileExists(fmt"./{repoName}/{filterName}/filter.json"):
+                result.add(newFilter(filterName, filterUrl))
         os.removeDir("./" & repoName)
     os.setCurrentDir(root)
     os.removeDir("./tmp")
@@ -38,6 +39,6 @@ var app = newApp()
 var filters = getFilters()
 app.get(
   "/filters",
-  proc(ctx: Context) {.async.} = await ctx.text(filters.join("\n"))
+  proc(ctx: Context) {.async.} = await ctx.text(filters.join("\n").replace("\\\"", ""))
 )
 waitFor app.run
